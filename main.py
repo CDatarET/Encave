@@ -1,13 +1,11 @@
-import tkinter as tk
+import pymysql
 
-root = tk.Tk()
-root.title("Encave")
-root.geometry("400x300")
+database = pymysql.connect(host = 'localhost', user = 'encave', password = 'password')
+Cursor = database.cursor()
 
-label = tk.Label(root, text = "Welcome Customer")
-label.pack()
-
-button = tk.Button(root, text = "Add Sandwich")
-button.pack()
-
-root.mainloop()
+Cursor.execute("use Encave;")
+Cursor.execute("""create table customers(
+    custID int primary key, 
+    firstName varchar(30), 
+    lastName varchar(30))""")
+database.commit()
