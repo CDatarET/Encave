@@ -30,7 +30,7 @@ public class Main {
         empLabel.setVisible(false);
         frame.add(empLabel);
 
-        JTextField dataField = new JTextField(); // Format: 1 John Doe 5000
+        JTextField dataField = new JTextField();
         dataField.setBounds(30, 190, 300, 30);
         dataField.setVisible(false);
         frame.add(dataField);
@@ -84,8 +84,8 @@ public class Main {
             Process p = pb.start();
             
             BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String result = in.readLine(); 
-            JOptionPane.showMessageDialog(null, "Python says: " + result);
+            String result = in.readLine();
+            System.out.println("Python says: " + result);
             
         }
         catch (Exception ex) {
