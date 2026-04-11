@@ -39,11 +39,11 @@ public class Main {
             String pass = new String(passField.getPassword());
             
             String response = login(user, pass);
-            if("SUCCESS".equals(response)) {
-                JOptionPane.showMessageDialog(frame, "Login Successful!");
+            if(response.startsWith("Welcome")) {
+                JOptionPane.showMessageDialog(frame, response);
             }
             else{
-                JOptionPane.showMessageDialog(frame, "Invalid username or password.");
+                JOptionPane.showMessageDialog(frame, response);
             }
         });
         
