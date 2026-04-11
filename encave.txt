@@ -1,0 +1,353 @@
+MariaDB [Encave]> select * from Customer;
++------------+-----------+----------+-------+-----------+----------+---------------------+
+| prn        | firstName | lastName | email | phone     | password | creation            |
++------------+-----------+----------+-------+-----------+----------+---------------------+
+| 1262242226 | Chaitanya | Datar    | email | 123456789 | password | 2026-04-11 18:27:22 |
++------------+-----------+----------+-------+-----------+----------+---------------------+
+1 row in set (0.000 sec)
+
+MariaDB [Encave]> select * from Customer;
++------------+-----------+-----------+---------+-----------+----------+---------------------+
+| prn        | firstName | lastName  | email   | phone     | password | creation            |
++------------+-----------+-----------+---------+-----------+----------+---------------------+
+| 1262242201 | Sushant   | Chaudhari | sc@emal |  67894323 | abc123   | 2026-04-11 18:29:35 |
+| 1262242226 | Chaitanya | Datar     | email   | 123456789 | password | 2026-04-11 18:27:22 |
++------------+-----------+-----------+---------+-----------+----------+---------------------+
+2 rows in set (0.001 sec)
+
+MariaDB [Encave]> show tables;
++------------------+
+| Tables_in_Encave |
++------------------+
+| Branch           |
+| Customer         |
+| Food_Item        |
++------------------+
+3 rows in set (0.001 sec)
+
+MariaDB [Encave]> desc Branch;
++------------+--------------+------+-----+---------+-------+
+| Field      | Type         | Null | Key | Default | Extra |
++------------+--------------+------+-----+---------+-------+
+| Branch_ID  | int(11)      | NO   | PRI | NULL    |       |
+| Location   | varchar(150) | NO   |     | NULL    |       |
+| Contact_No | varchar(15)  | NO   |     | NULL    |       |
++------------+--------------+------+-----+---------+-------+
+3 rows in set (0.003 sec)
+
+MariaDB [Encave]> desc Customer;
++-----------+--------------+------+-----+---------------------+-------+
+| Field     | Type         | Null | Key | Default             | Extra |
++-----------+--------------+------+-----+---------------------+-------+
+| prn       | int(11)      | NO   | PRI | NULL                |       |
+| firstName | varchar(50)  | NO   |     | NULL                |       |
+| lastName  | varchar(50)  | NO   |     | NULL                |       |
+| email     | varchar(100) | NO   | UNI | NULL                |       |
+| phone     | int(11)      | NO   | UNI | NULL                |       |
+| password  | varchar(50)  | NO   |     | NULL                |       |
+| creation  | datetime     | YES  |     | current_timestamp() |       |
++-----------+--------------+------+-----+---------------------+-------+
+7 rows in set (0.001 sec)
+
+MariaDB [Encave]> alter table Customer modify first varchar(20) not null;
+ERROR 1054 (42S22): Unknown column 'first' in 'Customer'
+MariaDB [Encave]> alter table Customer modify firstName varchar(20) not null;
+Query OK, 2 rows affected (0.092 sec)                      
+Records: 2  Duplicates: 0  Warnings: 0
+
+MariaDB [Encave]> alter table Customer modify lastName varchar(20) not null;
+Query OK, 2 rows affected (0.033 sec)                      
+Records: 2  Duplicates: 0  Warnings: 0
+
+MariaDB [Encave]> alter table Customer modify password varchar(20) not null;
+Query OK, 2 rows affected (0.082 sec)                      
+Records: 2  Duplicates: 0  Warnings: 0
+
+MariaDB [Encave]> desc Branch;
++------------+--------------+------+-----+---------+-------+
+| Field      | Type         | Null | Key | Default | Extra |
++------------+--------------+------+-----+---------+-------+
+| Branch_ID  | int(11)      | NO   | PRI | NULL    |       |
+| Location   | varchar(150) | NO   |     | NULL    |       |
+| Contact_No | varchar(15)  | NO   |     | NULL    |       |
++------------+--------------+------+-----+---------+-------+
+3 rows in set (0.001 sec)
+
+MariaDB [Encave]> alter table Branch modify Location varchar(150) not null unique;
+Query OK, 0 rows affected (0.022 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+MariaDB [Encave]> alter table Branch modify Contact_No int not null unique;
+Query OK, 0 rows affected (0.082 sec)              
+Records: 0  Duplicates: 0  Warnings: 0
+
+MariaDB [Encave]> show tables;
++------------------+
+| Tables_in_Encave |
++------------------+
+| Branch           |
+| Customer         |
+| Food_Item        |
++------------------+
+3 rows in set (0.001 sec)
+
+MariaDB [Encave]> desc Food_item;
+ERROR 1146 (42S02): Table 'Encave.Food_item' doesn't exist
+MariaDB [Encave]> desc Food_Item;
++-----------+--------------+------+-----+---------+-------+
+| Field     | Type         | Null | Key | Default | Extra |
++-----------+--------------+------+-----+---------+-------+
+| Item_ID   | int(11)      | NO   | PRI | NULL    |       |
+| Branch_ID | int(11)      | NO   | MUL | NULL    |       |
+| Name      | varchar(100) | NO   |     | NULL    |       |
+| Price     | float        | NO   |     | NULL    |       |
+| Quantity  | int(11)      | NO   |     | NULL    |       |
++-----------+--------------+------+-----+---------+-------+
+5 rows in set (0.001 sec)
+
+MariaDB [Encave]> alter table Food_Item modify Price float check(Price > 0);
+Query OK, 0 rows affected (0.023 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+MariaDB [Encave]> alter table Food_Item modify Quantity int check(Quantity > 0);
+Query OK, 0 rows affected (0.022 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+MariaDB [Encave]> desc Food_Item;
++-----------+--------------+------+-----+---------+-------+
+| Field     | Type         | Null | Key | Default | Extra |
++-----------+--------------+------+-----+---------+-------+
+| Item_ID   | int(11)      | NO   | PRI | NULL    |       |
+| Branch_ID | int(11)      | NO   | MUL | NULL    |       |
+| Name      | varchar(100) | NO   |     | NULL    |       |
+| Price     | float        | YES  |     | NULL    |       |
+| Quantity  | int(11)      | YES  |     | NULL    |       |
++-----------+--------------+------+-----+---------+-------+
+5 rows in set (0.001 sec)
+
+MariaDB [Encave]> create table Orders(orderID int primary key, prn int, Branch_ID int, orderDate datetime default current_timestamp(), status varchar(30) default "Pending", totalAmount float check(totalAmount > 0), foreign key (prn) references Customer(prn), foreign key (Branch_ID) references Branch(Branch_ID));
+Query OK, 0 rows affected (0.063 sec)
+
+MariaDB [Encave]> desc Orders;
++-------------+-------------+------+-----+---------------------+-------+
+| Field       | Type        | Null | Key | Default             | Extra |
++-------------+-------------+------+-----+---------------------+-------+
+| orderID     | int(11)     | NO   | PRI | NULL                |       |
+| prn         | int(11)     | YES  | MUL | NULL                |       |
+| Branch_ID   | int(11)     | YES  | MUL | NULL                |       |
+| orderDate   | datetime    | YES  |     | current_timestamp() |       |
+| status      | varchar(30) | YES  |     | Pending             |       |
+| totalAmount | float       | YES  |     | NULL                |       |
++-------------+-------------+------+-----+---------------------+-------+
+6 rows in set (0.002 sec)
+
+MariaDB [Encave]> 
+
+MariaDB [Encave]> alter table Food_Item modify Price float check(Price > 0);
+Query OK, 0 rows affected (0.023 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+MariaDB [Encave]> alter table Food_Item modify Quantity int check(Quantity > 0);
+Query OK, 0 rows affected (0.022 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+MariaDB [Encave]> desc Food_Item;
++-----------+--------------+------+-----+---------+-------+
+| Field     | Type         | Null | Key | Default | Extra |
++-----------+--------------+------+-----+---------+-------+
+| Item_ID   | int(11)      | NO   | PRI | NULL    |       |
+| Branch_ID | int(11)      | NO   | MUL | NULL    |       |
+| Name      | varchar(100) | NO   |     | NULL    |       |
+| Price     | float        | YES  |     | NULL    |       |
+| Quantity  | int(11)      | YES  |     | NULL    |       |
++-----------+--------------+------+-----+---------+-------+
+5 rows in set (0.001 sec)
+
+MariaDB [Encave]> create table Orders(orderID int primary key, prn int, Branch_ID int, orderDate datetime default current_timestamp(), status varchar(30) default "Pending", totalAmount float check(totalAmount > 0), foreign key (prn) references Customer(prn), foreign key (Branch_ID) references Branch(Branch_ID));
+Query OK, 0 rows affected (0.063 sec)
+
+MariaDB [Encave]> desc Orders;
++-------------+-------------+------+-----+---------------------+-------+
+| Field       | Type        | Null | Key | Default             | Extra |
++-------------+-------------+------+-----+---------------------+-------+
+| orderID     | int(11)     | NO   | PRI | NULL                |       |
+| prn         | int(11)     | YES  | MUL | NULL                |       |
+| Branch_ID   | int(11)     | YES  | MUL | NULL                |       |
+| orderDate   | datetime    | YES  |     | current_timestamp() |       |
+| status      | varchar(30) | YES  |     | Pending             |       |
+| totalAmount | float       | YES  |     | NULL                |       |
++-------------+-------------+------+-----+---------------------+-------+
+6 rows in set (0.002 sec)
+
+MariaDB [Encave]> create table Order_Details
+    -> (orderID int, Item_ID ^C
+    -> ^C
+    -> ;
+ERROR 1113 (42000): A table must have at least 1 column
+MariaDB [Encave]> desc Food_Item;
++-----------+--------------+------+-----+---------+-------+
+| Field     | Type         | Null | Key | Default | Extra |
++-----------+--------------+------+-----+---------+-------+
+| Item_ID   | int(11)      | NO   | PRI | NULL    |       |
+| Branch_ID | int(11)      | NO   | MUL | NULL    |       |
+| Name      | varchar(100) | NO   |     | NULL    |       |
+| Price     | float        | YES  |     | NULL    |       |
+| Quantity  | int(11)      | YES  |     | NULL    |       |
++-----------+--------------+------+-----+---------+-------+
+5 rows in set (0.001 sec)
+
+MariaDB [Encave]> create table Order_Details
+    -> (orderID int, Item_ID int, Item_Qty int check(Item_Qty > 0), Subtotal float check(Subtotal > 0), 
+    -> foreign key (Item_ID) references Food_Item(Item_ID), foreign key (orderID) references Orders(orderID), Branch_ID int, 
+    -> foreign key (Branch_ID) references Branch(Branch_ID));
+Query OK, 0 rows affected (0.017 sec)
+
+MariaDB [Encave]> desc Order_Details;
++-----------+---------+------+-----+---------+-------+
+| Field     | Type    | Null | Key | Default | Extra |
++-----------+---------+------+-----+---------+-------+
+| orderID   | int(11) | YES  | MUL | NULL    |       |
+| Item_ID   | int(11) | YES  | MUL | NULL    |       |
+| Item_Qty  | int(11) | YES  |     | NULL    |       |
+| Subtotal  | float   | YES  |     | NULL    |       |
+| Branch_ID | int(11) | YES  | MUL | NULL    |       |
++-----------+---------+------+-----+---------+-------+
+5 rows in set (0.001 sec)
+
+MariaDB [Encave]> create table Payment
+    -> (PaymentID int primary key, orderID int, Payment_Mode varchar(50) not null default "UPI", Payment_Status varchar(50) default "Pending",
+    -> foreign key (orderID) references Orders(orderID));
+Query OK, 0 rows affected (0.013 sec)
+
+MariaDB [Encave]> desc Payment;
++----------------+-------------+------+-----+---------+-------+
+| Field          | Type        | Null | Key | Default | Extra |
++----------------+-------------+------+-----+---------+-------+
+| PaymentID      | int(11)     | NO   | PRI | NULL    |       |
+| orderID        | int(11)     | YES  | MUL | NULL    |       |
+| Payment_Mode   | varchar(50) | NO   |     | UPI     |       |
+| Payment_Status | varchar(50) | YES  |     | Pending |       |
++----------------+-------------+------+-----+---------+-------+
+4 rows in set (0.001 sec)
+
+MariaDB [Encave]> 
+MariaDB [Encave]> delimiter /
+MariaDB [Encave]> create function getWaitTime(f_BranchID int)
+    -> returns int
+    -> deterministic
+    -> begin
+    -> declare Total_Pending int;
+    -> declare estMin int;
+    -> 
+    -> select count(*) into Total_Pending
+    -> from Orders
+    -> where Branch_ID = f_BranchID
+    -> and status = "Pending";
+    -> set estMin = (Total_Pending * 5) + 5;
+    -> return estMin;
+    -> 
+    -> end /
+Query OK, 0 rows affected (0.056 sec)
+
+MariaDB [Encave]> delimiter 
+ERROR: DELIMITER must be followed by a 'delimiter' character or string
+MariaDB [Encave]> delimiter ;
+MariaDB [Encave]> delimiter /
+MariaDB [Encave]> create procedure placeOrder(
+    -> in p_userID int
+    -> ,
+    -> in p_branchID int,
+    -> in p_amount float,
+    -> in p_paymentMode varchar(50),
+    -> out p_orderID int
+    -> )
+    -> begin
+    -> start transaction;
+    -> 
+    -> insert into Orders(prn, Branch_ID, orderDate, totalAmount)
+    -> values(p_userID, p_branchID, now(), p_amount);
+    -> set p_orderID = last_insert_id();
+    -> insert into Payment(orderID, Payment_Mode, Payment_Status)
+    -> values(p_orderID, p_paymentMode, "Success");
+    -> commit;
+    -> end /
+Query OK, 0 rows affected (0.057 sec)
+
+MariaDB [Encave]> delimiter ;
+MariaDB [Encave]> delimiter /
+MariaDB [Encave]> create trigger reduceStock
+    -> after insert on Order_Details
+    -> for each row 
+    -> begin
+    -> update Food_Item
+    -> set Quantity = Quantity - new.Quantity
+    -> where Item_ID = new.Item_ID;
+    -> 
+    -> update Food_Item
+    -> set Availability = "No"
+    -> where Item_ID = new.Item_ID
+    -> and Quantity <= 0;
+    -> 
+    -> end
+    -> /
+ERROR 1054 (42S22): Unknown column 'Quantity' in 'NEW'
+MariaDB [Encave]> delimiter ;
+MariaDB [Encave]> delimiter /
+MariaDB [Encave]> create trigger reduceStock
+    -> after insert on Order_Details
+    -> for each row 
+    -> begin
+    -> update Food_Item
+    -> set Quantity = Quantity - new.Quantity
+    -> where Item_ID = new.Item_ID;
+    -> 
+    -> update Food_Item
+    -> set Availability = "No"
+    -> where Item_ID = new.Item_ID
+    -> and Quantity <= 0;
+    -> 
+    -> end
+    -> /
+ERROR 1054 (42S22): Unknown column 'Quantity' in 'NEW'
+MariaDB [Encave]> drop procedure placeOrder;
+    -> /
+Query OK, 0 rows affected (0.005 sec)
+
+MariaDB [Encave]> alter table Orders modify orderID int auto_increment;
+    -> /
+Query OK, 0 rows affected (0.078 sec)              
+Records: 0  Duplicates: 0  Warnings: 0
+
+MariaDB [Encave]> create procedure placeOrder(
+    -> in p_userID int
+    -> ,
+    -> in p_branchID int,
+    -> in p_amount float,
+    -> in p_paymentMode varchar(50),
+    -> out p_orderID int)
+    -> begin
+    -> start transaction;
+    -> 
+    -> insert into Orders(prn, Branch_ID, orderDate, totalAmount)
+    -> values(p_userID, p_branchID, now(), p_amount);
+    -> set p_orderID = last_insert_id();
+    -> insert into Payment(orderID, Payment_Mode, Payment_Status)
+    -> values(p_orderID, p_paymentMode, "Success");
+    -> commit;
+    -> end /
+Query OK, 0 rows affected (0.005 sec)
+
+MariaDB [Encave]> CREATE TRIGGER reduceStock
+    -> AFTER INSERT ON Order_Details
+    -> FOR EACH ROW 
+    -> BEGIN
+    ->     UPDATE Food_Item
+    ->     SET Quantity = Quantity - NEW.Item_Qty
+    ->     WHERE Item_ID = NEW.Item_ID;
+    ->     
+    ->     UPDATE Food_Item
+    ->     SET Availability = 'No'
+    ->     WHERE Item_ID = NEW.Item_ID AND Quantity <= 0;
+    -> END /
+Query OK, 0 rows affected (0.059 sec)
+
