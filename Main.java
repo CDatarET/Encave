@@ -33,38 +33,20 @@ public class Main {
         JButton signupBtn = new JButton("Sign Up");
         signupBtn.setBounds(350 + 205, 200, 95, 30);
         frame.add(signupBtn);
-
-        JLabel empLabel = new JLabel("Add Employee (ID, FName, LName, Salary):");
-        empLabel.setBounds(350, 450, 300, 30);
-        empLabel.setVisible(false);
-        frame.add(empLabel);
-
-        JTextField dataField = new JTextField();
-        dataField.setBounds(350, 490, 300, 30);
-        dataField.setVisible(false);
-        frame.add(dataField);
-
-        JButton submitBtn = new JButton("Submit to DB");
-        submitBtn.setBounds(350, 530, 150, 30);
-        submitBtn.setVisible(false);
-        frame.add(submitBtn);
-
-        /*
+ 
         loginBtn.addActionListener(e -> {
             String user = userField.getText();
             String pass = new String(passField.getPassword());
             
-            String response = addUser("login", user, pass);
-            if ("SUCCESS".equals(response)) {
+            String response = login(user, pass);
+            if("SUCCESS".equals(response)) {
                 JOptionPane.showMessageDialog(frame, "Login Successful!");
-                empLabel.setVisible(true);
-                dataField.setVisible(true);
-                submitBtn.setVisible(true);
-            } else {
+            }
+            else{
                 JOptionPane.showMessageDialog(frame, "Invalid username or password.");
             }
         });
-        */
+        
 
         signupBtn.addActionListener(e -> {
             JPanel panel = new JPanel(new GridLayout(6, 2, 10, 10));
@@ -101,18 +83,7 @@ public class Main {
                 String response = addUser(prn, fname, lname, email, phone, password);
                 JOptionPane.showMessageDialog(frame, response);
             }
-});
-        /*
-        submitBtn.addActionListener(e -> {
-            String[] d = dataField.getText().split(" ");
-            if (d.length == 4) {
-                addUser("employee", d[0], d[1], d[2], d[3]);
-                JOptionPane.showMessageDialog(frame, "Employee Added!");
-            } else {
-                JOptionPane.showMessageDialog(frame, "Format: ID FName LName Salary");
-            }
         });
-        */
 
         frame.setVisible(true);
     }
@@ -120,6 +91,34 @@ public class Main {
     public static String addUser(String prn, String fname, String lname, String email, String phone, String password) {
         try {
             String[] command = new String[] {"python", "addUser.py", prn, fname, lname, email, phone, password};
+
+            ProcessBuilder pb = new ProcessBuilder(command);
+            pb.redirectErrorStream(true);
+
+            Process p = pb.start();
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+            StringBuilder output = new StringBuilder();
+            String line;
+
+            while ((line = in.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+
+            p.waitFor();
+
+            return output.toString().trim();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return "";
+        }
+    }
+
+    public static String login(String prn, String password) {
+        try {
+            String[] command = new String[] {"python", "login.py", prn, password};
 
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
