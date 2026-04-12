@@ -41,12 +41,19 @@ public class Main {
             String response = login(user, pass);
             if(response.startsWith("Welcome")) {
                 JOptionPane.showMessageDialog(frame, response);
+                userLabel.setVisible(false);
+                userField.setVisible(false);
+                passLabel.setVisible(false);
+                passField.setVisible(false);
+                loginBtn.setVisible(false);
+                signupBtn.setVisible(false);
+
+                showShopUI(frame);
             }
             else{
                 JOptionPane.showMessageDialog(frame, response);
             }
         });
-        
 
         signupBtn.addActionListener(e -> {
             JPanel panel = new JPanel(new GridLayout(6, 2, 10, 10));
@@ -142,5 +149,92 @@ public class Main {
             ex.printStackTrace();
             return "";
         }
+    }
+
+    public static String placeOrder(int[] order) {
+        try {
+            String[] command = new String[] {"python", "placeOrder.py"};
+
+            ProcessBuilder pb = new ProcessBuilder(command);
+            pb.redirectErrorStream(true);
+
+            Process p = pb.start();
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+            StringBuilder output = new StringBuilder();
+            String line;
+
+            while ((line = in.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+
+            p.waitFor();
+
+            return output.toString().trim();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return "";
+        }
+    }
+
+    public static void showShopUI(JFrame frame) {
+        int itemCount = 6;
+        int cols = 3;
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(0, cols, 20, 20));
+        panel.setBounds(100, 50, 800, 600);
+        
+        int[] count = new int[itemCount];
+        for (int i = 0; i < itemCount; i++) {
+            JPanel itemPanel = new JPanel();
+            itemPanel.setLayout(new BorderLayout());
+
+            JLabel imageLabel = new JLabel("Item " + (i + 1), SwingConstants.CENTER);
+            imageLabel.setPreferredSize(new Dimension(150, 100));
+            imageLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+
+            JLabel qtyLabel = new JLabel("0", SwingConstants.CENTER);
+
+            JButton addBtn = new JButton("+");
+            JButton subBtn = new JButton("-");
+
+            addBtn.addActionListener(e -> {
+                count[0]++;
+                qtyLabel.setText(String.valueOf(count[0]));
+            });
+
+            subBtn.addActionListener(e -> {
+                if (count[0] > 0) {
+                    count[0]--;
+                    qtyLabel.setText(String.valueOf(count[0]));
+                }
+            });
+
+            JPanel controlPanel = new JPanel();
+            controlPanel.add(subBtn);
+            controlPanel.add(qtyLabel);
+            controlPanel.add(addBtn);
+
+            itemPanel.add(imageLabel, BorderLayout.CENTER);
+            itemPanel.add(controlPanel, BorderLayout.SOUTH);
+
+            panel.add(itemPanel);
+        }
+
+        JButton orderBtn = new JButton("Order");
+        orderBtn.setBounds(450, 700, 100, 30);
+        frame.add(orderBtn);
+        orderBtn.setVisible(true);
+        
+        orderBtn.addActionListener(e -> {
+            String response = placeOrder(count);
+            JOptionPane.showMessageDialog(frame, response);
+        });
+
+        frame.add(panel);
+        frame.repaint();
     }
 }
