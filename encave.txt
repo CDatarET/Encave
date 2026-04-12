@@ -350,4 +350,349 @@ MariaDB [Encave]> CREATE TRIGGER reduceStock
     ->     WHERE Item_ID = NEW.Item_ID AND Quantity <= 0;
     -> END /
 Query OK, 0 rows affected (0.059 sec)
+MariaDB [Encave]> show procedure status;
++--------+--------------------+-----------+------------------+---------------------+---------------------+---------------+---------+----------------------+-----------------------+--------------------+
+| Db     | Name               | Type      | Definer          | Modified            | Created             | Security_type | Comment | character_set_client | collation_connection  | Database Collation |
++--------+--------------------+-----------+------------------+---------------------+---------------------+---------------+---------+----------------------+-----------------------+--------------------+
+| Encave | dailyrevenuereport | PROCEDURE | encave@localhost | 2026-04-11 19:30:59 | 2026-04-11 19:30:59 | DEFINER       |         | utf8mb4              | utf8mb4_uca1400_ai_ci | utf8mb4_unicode_ci |
+| Encave | placeOrder         | PROCEDURE | encave@localhost | 2026-04-11 19:26:40 | 2026-04-11 19:26:40 | DEFINER       |         | utf8mb4              | utf8mb4_uca1400_ai_ci | utf8mb4_unicode_ci |
++--------+--------------------+-----------+------------------+---------------------+---------------------+---------------+---------+----------------------+-----------------------+--------------------+
+2 rows in set (0.001 sec)
+
+MariaDB [Encave]> SHOW CREATE PROCEDURE placeOrder;
++------------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------+-----------------------+--------------------+
+| Procedure  | sql_mode                                                                                  | Create Procedure                                                                                                                                                                                                                                                                                                                                                                                                                                               | character_set_client | collation_connection  | Database Collation |
++------------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------+-----------------------+--------------------+
+| placeOrder | STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION | CREATE DEFINER=`encave`@`localhost` PROCEDURE `placeOrder`(
+in p_userID int
+,
+in p_branchID int,
+in p_amount float,
+in p_paymentMode varchar(50),
+out p_orderID int)
+begin
+start transaction;
+
+insert into Orders(prn, Branch_ID, orderDate, totalAmount)
+values(p_userID, p_branchID, now(), p_amount);
+set p_orderID = last_insert_id();
+insert into Payment(orderID, Payment_Mode, Payment_Status)
+values(p_orderID, p_paymentMode, "Success");
+commit;
+end | utf8mb4              | utf8mb4_uca1400_ai_ci | utf8mb4_unicode_ci |
++------------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------+-----------------------+--------------------+
+1 row in set (0.004 sec)
+
+MariaDB [Encave]> call placeOrder(1, 100, "UPI");
+ERROR 1318 (42000): Incorrect number of arguments for PROCEDURE Encave.placeOrder; expected 5, got 3
+MariaDB [Encave]> call placeOrder(1, 1, 109, "UPI", 1);
+ERROR 1414 (42000): OUT or INOUT argument 5 for routine Encave.placeOrder is not a variable or NEW pseudo-variable in BEFORE trigger
+MariaDB [Encave]> call placeOrder(1, 1, 109, "UPI");
+ERROR 1318 (42000): Incorrect number of arguments for PROCEDURE Encave.placeOrder; expected 5, got 4
+MariaDB [Encave]> set @lastOrderID = 0;
+Query OK, 0 rows affected (0.000 sec)
+
+MariaDB [Encave]> call placeOrder(1, 1, 109, "UPI", @lastOrderID);
+Query OK, 2 rows affected (0.053 sec)
+
+MariaDB [Encave]> show tables;
++------------------+
+| Tables_in_Encave |
++------------------+
+| Branch           |
+| Customer         |
+| Food_Item        |
+| Order_Details    |
+| Orders           |
+| Payment          |
++------------------+
+6 rows in set (0.001 sec)
+
+MariaDB [Encave]> select * from Order_Details;
+Empty set (0.001 sec)
+
+MariaDB [Encave]> select * from Orders;
++---------+------+-----------+---------------------+---------+-------------+
+| orderID | prn  | Branch_ID | orderDate           | status  | totalAmount |
++---------+------+-----------+---------------------+---------+-------------+
+|       2 |    1 |         1 | 2026-04-12 18:18:07 | Pending |         109 |
++---------+------+-----------+---------------------+---------+-------------+
+1 row in set (0.000 sec)
+
+MariaDB [Encave]> select * from Payment;
++-----------+---------+--------------+----------------+
+| PaymentID | orderID | Payment_Mode | Payment_Status |
++-----------+---------+--------------+----------------+
+|         1 |       2 | UPI          | Success        |
++-----------+---------+--------------+----------------+
+1 row in set (0.001 sec)
+
+MariaDB [Encave]> show function status;
++--------+-------------+----------+------------------+---------------------+---------------------+---------------+---------+----------------------+-----------------------+--------------------+
+| Db     | Name        | Type     | Definer          | Modified            | Created             | Security_type | Comment | character_set_client | collation_connection  | Database Collation |
++--------+-------------+----------+------------------+---------------------+---------------------+---------------+---------+----------------------+-----------------------+--------------------+
+| Encave | getWaitTime | FUNCTION | encave@localhost | 2026-04-11 19:04:11 | 2026-04-11 19:04:11 | DEFINER       |         | utf8mb4              | utf8mb4_uca1400_ai_ci | utf8mb4_unicode_ci |
++--------+-------------+----------+------------------+---------------------+---------------------+---------------+---------+----------------------+-----------------------+--------------------+
+1 row in set (0.001 sec)
+
+MariaDB [Encave]> SHOW CREATE FUNCTION getWaitTime;;
++-------------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------+-----------------------+--------------------+
+| Function    | sql_mode                                                                                  | Create Function                                                                                                                                                                                                                                                                                                                  | character_set_client | collation_connection  | Database Collation |
++-------------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------+-----------------------+--------------------+
+| getWaitTime | STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION | CREATE DEFINER=`encave`@`localhost` FUNCTION `getWaitTime`(f_BranchID int) RETURNS int(11)
+    DETERMINISTIC
+begin
+declare Total_Pending int;
+declare estMin int;
+
+select count(*) into Total_Pending
+from Orders
+where Branch_ID = f_BranchID
+and status = "Pending";
+set estMin = (Total_Pending * 5) + 5;
+return estMin;
+
+end | utf8mb4              | utf8mb4_uca1400_ai_ci | utf8mb4_unicode_ci |
++-------------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------+-----------------------+--------------------+
+1 row in set (0.029 sec)
+
+ERROR: No query specified
+
+MariaDB [Encave]> select getWaitTime();
+ERROR 1318 (42000): Incorrect number of arguments for FUNCTION Encave.getWaitTime; expected 1, got 0
+MariaDB [Encave]> select getWaitTime(1);
++----------------+
+| getWaitTime(1) |
++----------------+
+|             10 |
++----------------+
+1 row in set (0.051 sec)
+
+MariaDB [Encave]> SHOW TRIGGERS FROM Encave;
++-------------+--------+---------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------+------------------------+-------------------------------------------------------------------------------------------+------------------+----------------------+-----------------------+--------------------+
+| Trigger     | Event  | Table         | Statement                                                                                                                                                                                                           | Timing | Created                | sql_mode                                                                                  | Definer          | character_set_client | collation_connection  | Database Collation |
++-------------+--------+---------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------+------------------------+-------------------------------------------------------------------------------------------+------------------+----------------------+-----------------------+--------------------+
+| reduceStock | INSERT | Order_Details | BEGIN
+    UPDATE Food_Item
+    SET Quantity = Quantity - NEW.Item_Qty
+    WHERE Item_ID = NEW.Item_ID;
+    
+    UPDATE Food_Item
+    SET Availability = 'No'
+    WHERE Item_ID = NEW.Item_ID AND Quantity <= 0;
+END | AFTER  | 2026-04-11 19:27:40.42 | STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION | encave@localhost | utf8mb4              | utf8mb4_uca1400_ai_ci | utf8mb4_unicode_ci |
++-------------+--------+---------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------+------------------------+-------------------------------------------------------------------------------------------+------------------+----------------------+-----------------------+--------------------+
+1 row in set (0.029 sec)
+
+MariaDB [Encave]> SHOW CREATE TRIGGER reduceStock;
++-------------+-------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------+-----------------------+--------------------+------------------------+
+| Trigger     | sql_mode                                                                                  | SQL Original Statement                                                                                                                                                                                                                                                                                                  | character_set_client | collation_connection  | Database Collation | Created                |
++-------------+-------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------+-----------------------+--------------------+------------------------+
+| reduceStock | STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION | CREATE DEFINER=`encave`@`localhost` TRIGGER reduceStock
+AFTER INSERT ON Order_Details
+FOR EACH ROW 
+BEGIN
+    UPDATE Food_Item
+    SET Quantity = Quantity - NEW.Item_Qty
+    WHERE Item_ID = NEW.Item_ID;
+    
+    UPDATE Food_Item
+    SET Availability = 'No'
+    WHERE Item_ID = NEW.Item_ID AND Quantity <= 0;
+END | utf8mb4              | utf8mb4_uca1400_ai_ci | utf8mb4_unicode_ci | 2026-04-11 19:27:40.42 |
++-------------+-------------------------------------------------------------------------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------+-----------------------+--------------------+------------------------+
+1 row in set (0.002 sec)
+
+MariaDB [Encave]> select * from Food_Item;
+Empty set (0.001 sec)
+
+MariaDB [Encave]> select * from Order_Details;
+Empty set (0.000 sec)
+
+MariaDB [Encave]> desc Order_Details;
++-----------+---------+------+-----+---------+-------+
+| Field     | Type    | Null | Key | Default | Extra |
++-----------+---------+------+-----+---------+-------+
+| orderID   | int(11) | YES  | MUL | NULL    |       |
+| Item_ID   | int(11) | YES  | MUL | NULL    |       |
+| Item_Qty  | int(11) | YES  |     | NULL    |       |
+| Subtotal  | float   | YES  |     | NULL    |       |
+| Branch_ID | int(11) | YES  | MUL | NULL    |       |
++-----------+---------+------+-----+---------+-------+
+5 rows in set (0.002 sec)
+
+MariaDB [Encave]> select * from Food_Item;
+Empty set (0.000 sec)
+
+MariaDB [Encave]> desc Orders;
++-------------+-------------+------+-----+---------------------+----------------+
+| Field       | Type        | Null | Key | Default             | Extra          |
++-------------+-------------+------+-----+---------------------+----------------+
+| orderID     | int(11)     | NO   | PRI | NULL                | auto_increment |
+| prn         | int(11)     | YES  | MUL | NULL                |                |
+| Branch_ID   | int(11)     | YES  | MUL | NULL                |                |
+| orderDate   | datetime    | YES  |     | current_timestamp() |                |
+| status      | varchar(30) | YES  |     | Pending             |                |
+| totalAmount | float       | YES  |     | NULL                |                |
++-------------+-------------+------+-----+---------------------+----------------+
+6 rows in set (0.001 sec)
+
+MariaDB [Encave]> select * from Orders
+    -> ;
++---------+------+-----------+---------------------+---------+-------------+
+| orderID | prn  | Branch_ID | orderDate           | status  | totalAmount |
++---------+------+-----------+---------------------+---------+-------------+
+|       2 |    1 |         1 | 2026-04-12 18:18:07 | Pending |         109 |
++---------+------+-----------+---------------------+---------+-------------+
+1 row in set (0.000 sec)
+
+MariaDB [Encave]> desc Food_Item;
++--------------+--------------+------+-----+---------+-------+
+| Field        | Type         | Null | Key | Default | Extra |
++--------------+--------------+------+-----+---------+-------+
+| Item_ID      | int(11)      | NO   | PRI | NULL    |       |
+| Branch_ID    | int(11)      | NO   | MUL | NULL    |       |
+| Name         | varchar(100) | NO   |     | NULL    |       |
+| Price        | float        | YES  |     | NULL    |       |
+| Quantity     | int(11)      | YES  |     | NULL    |       |
+| Availability | varchar(50)  | YES  |     | Yes     |       |
++--------------+--------------+------+-----+---------+-------+
+6 rows in set (0.001 sec)
+
+MariaDB [Encave]> insert into Food_Item values(1, 1, 'Sandwich', 109, 10, default);
+Query OK, 1 row affected (0.004 sec)
+
+MariaDB [Encave]> desc Order_Details;
++-----------+---------+------+-----+---------+-------+
+| Field     | Type    | Null | Key | Default | Extra |
++-----------+---------+------+-----+---------+-------+
+| orderID   | int(11) | YES  | MUL | NULL    |       |
+| Item_ID   | int(11) | YES  | MUL | NULL    |       |
+| Item_Qty  | int(11) | YES  |     | NULL    |       |
+| Subtotal  | float   | YES  |     | NULL    |       |
+| Branch_ID | int(11) | YES  | MUL | NULL    |       |
++-----------+---------+------+-----+---------+-------+
+5 rows in set (0.001 sec)
+
+MariaDB [Encave]> insert into Order_Details values(2, 1, 1, 109, 1);
+Query OK, 1 row affected (0.004 sec)
+
+MariaDB [Encave]> select * from Food_Item;
++---------+-----------+----------+-------+----------+--------------+
+| Item_ID | Branch_ID | Name     | Price | Quantity | Availability |
++---------+-----------+----------+-------+----------+--------------+
+|       1 |         1 | Sandwich |   109 |        9 | Yes          |
++---------+-----------+----------+-------+----------+--------------+
+1 row in set (0.000 sec)
+
+MariaDB [Encave]> show procedure status;
++--------+--------------------+-----------+------------------+---------------------+---------------------+---------------+---------+----------------------+-----------------------+--------------------+
+| Db     | Name               | Type      | Definer          | Modified            | Created             | Security_type | Comment | character_set_client | collation_connection  | Database Collation |
++--------+--------------------+-----------+------------------+---------------------+---------------------+---------------+---------+----------------------+-----------------------+--------------------+
+| Encave | dailyrevenuereport | PROCEDURE | encave@localhost | 2026-04-11 19:30:59 | 2026-04-11 19:30:59 | DEFINER       |         | utf8mb4              | utf8mb4_uca1400_ai_ci | utf8mb4_unicode_ci |
+| Encave | placeOrder         | PROCEDURE | encave@localhost | 2026-04-11 19:26:40 | 2026-04-11 19:26:40 | DEFINER       |         | utf8mb4              | utf8mb4_uca1400_ai_ci | utf8mb4_unicode_ci |
++--------+--------------------+-----------+------------------+---------------------+---------------------+---------------+---------+----------------------+-----------------------+--------------------+
+2 rows in set (0.001 sec)
+
+MariaDB [Encave]> SHOW CREATE PROCEDURE dailyrevenuereport;
++--------------------+-------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------+-----------------------+--------------------+
+| Procedure          | sql_mode                                                                                  | Create Procedure                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | character_set_client | collation_connection  | Database Collation |
++--------------------+-------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------+-----------------------+--------------------+
+| dailyrevenuereport | STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION | CREATE DEFINER=`encave`@`localhost` PROCEDURE `dailyrevenuereport`(
+    in p_branchid int,
+    out p_totalrevenue float
+)
+begin
+    declare done int default false;
+    declare orderamt float;
+    declare runningsum float default 0.00;
+
+    
+    
+    declare rev_cursor cursor for 
+        select totalamount from orders 
+        where branch_id = p_branchid 
+        and date(orderdate) = curdate();
+
+    
+    declare continue handler for not found set done = true;
+
+    
+    open rev_cursor;
+
+    read_loop: loop
+        fetch rev_cursor into orderamt;
+        if done then
+            leave read_loop;
+        end if;
+        set runningsum = runningsum + orderamt;
+    end loop;
+
+    close rev_cursor;
+
+    
+    set p_totalrevenue = runningsum;
+end | utf8mb4              | utf8mb4_uca1400_ai_ci | utf8mb4_unicode_ci |
++--------------------+-------------------------------------------------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------+-----------------------+--------------------+
+1 row in set (0.001 sec)
+
+MariaDB [Encave]> call dailyrevenuereport(1);
+ERROR 1318 (42000): Incorrect number of arguments for PROCEDURE Encave.dailyrevenuereport; expected 2, got 1
+MariaDB [Encave]> set @totalRevenue = 0;
+Query OK, 0 rows affected (0.000 sec)
+
+MariaDB [Encave]> call dailyrevenuereport(1, @totalRevenue);
+ERROR 1146 (42S02): Table 'Encave.orders' doesn't exist
+MariaDB [Encave]> DROP PROCEDURE dailyrevenuereport;
+Query OK, 0 rows affected (0.006 sec)
+
+MariaDB [Encave]> delimiter /
+MariaDB [Encave]> CREATE PROCEDURE dailyrevenuereport(
+    ->     IN p_branchid INT,
+    ->     OUT p_totalrevenue FLOAT
+    -> )
+    -> BEGIN
+    ->     DECLARE done INT DEFAULT FALSE;
+    ->     DECLARE orderamt FLOAT;
+    ->     DECLARE runningsum FLOAT DEFAULT 0.00;
+    -> 
+    ->     DECLARE rev_cursor CURSOR FOR 
+    ->         SELECT totalamount 
+    ->         FROM Orders 
+    ->         WHERE Branch_ID = p_branchid 
+    ->         AND DATE(orderDate) = CURDATE();
+    -> 
+    ->     DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    -> 
+    ->     OPEN rev_cursor;
+    -> 
+    ->     read_loop: LOOP
+    ->         FETCH rev_cursor INTO orderamt;
+    -> 
+    ->         IF done THEN
+    ->             LEAVE read_loop;
+    ->         END IF;
+    -> 
+    ->         SET runningsum = runningsum + orderamt;
+    ->     END LOOP;
+    -> 
+    ->     CLOSE rev_cursor;
+    -> 
+    ->     SET p_totalrevenue = runningsum;
+    -> END /
+Query OK, 0 rows affected (0.054 sec)
+
+MariaDB [Encave]> delimiter ;
+MariaDB [Encave]> call dailyrevenuereport(1, @totalRevenue);
+Query OK, 0 rows affected (0.001 sec)
+
+MariaDB [Encave]> select @totalRevenue;
++---------------+
+| @totalRevenue |
++---------------+
+|           109 |
++---------------+
+1 row in set (0.000 sec)
+
+MariaDB [Encave]> 
 
