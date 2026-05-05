@@ -2,7 +2,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 
+
 public class Main {
+    public static String curUser;
+    public static String branch = "1";
     public static void main(String[] args) {
         JFrame frame = new JFrame("Encave");
         frame.setSize(1000, 800);
@@ -47,6 +50,7 @@ public class Main {
                 passField.setVisible(false);
                 loginBtn.setVisible(false);
                 signupBtn.setVisible(false);
+                curUser = userField.getText();
 
                 showShopUI(frame);
             }
@@ -153,7 +157,15 @@ public class Main {
 
     public static String placeOrder(int[] order) {
         try {
-            String[] command = new String[] {"python", "placeOrder.py"};
+            String[] command = new String[order.length + 4];
+            command[0] = "python";
+            command[1] = "placeOrder.py";
+            command[2] = curUser;
+            command[3] = branch;
+
+            for (int i = 0; i < order.length; i++) {
+                command[i + 4] = String.valueOf(order[i]);
+            }
 
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
@@ -173,7 +185,8 @@ public class Main {
 
             return output.toString().trim();
 
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             ex.printStackTrace();
             return "";
         }
@@ -189,6 +202,8 @@ public class Main {
         
         int[] count = new int[itemCount];
         for (int i = 0; i < itemCount; i++) {
+            int index = i;
+
             JPanel itemPanel = new JPanel();
             itemPanel.setLayout(new BorderLayout());
 
@@ -202,14 +217,14 @@ public class Main {
             JButton subBtn = new JButton("-");
 
             addBtn.addActionListener(e -> {
-                count[0]++;
-                qtyLabel.setText(String.valueOf(count[0]));
+                count[index]++;
+                qtyLabel.setText(String.valueOf(count[index]));
             });
 
             subBtn.addActionListener(e -> {
-                if (count[0] > 0) {
-                    count[0]--;
-                    qtyLabel.setText(String.valueOf(count[0]));
+                if (count[index] > 0) {
+                    count[index]--;
+                    qtyLabel.setText(String.valueOf(count[index]));
                 }
             });
 
